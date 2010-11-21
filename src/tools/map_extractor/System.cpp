@@ -276,7 +276,7 @@ void ReadLiquidTypeTableDBC()
 
 // Map file format data
 static char const* MAP_MAGIC         = "MAPS";
-static char const* MAP_VERSION_MAGIC = "v1.1";
+static char const* MAP_VERSION_MAGIC = "v1.2"; //Changed for mMaps
 static char const* MAP_AREA_MAGIC    = "AREA";
 static char const* MAP_HEIGHT_MAGIC  = "MHGT";
 static char const* MAP_LIQUID_MAGIC  = "MLIQ";
@@ -292,6 +292,8 @@ struct map_fileheader
     uint32 heightMapSize;
     uint32 liquidMapOffset;
     uint32 liquidMapSize;
+    uint32 holesOffset; 
+    uint32 holesSize; 
 };
 
 #define MAP_AREA_NO_AREA      0x0001
@@ -655,7 +657,7 @@ bool ConvertADT(char *filename, char *filename2, int cell_y, int cell_x, uint32 
                 // Dark water detect
                 if (type == LIQUID_TYPE_OCEAN)
                 {
-                    uint8 *lm = h2o->getLiquidLightMap(h);
+                    uint8 *lm = h2o->getLiquidLightMap(h); 
                     if (!lm)
                         liquid_type[i][j]|=MAP_LIQUID_TYPE_DARK_WATER;
                 }
@@ -813,10 +815,29 @@ bool ConvertADT(char *filename, char *filename2, int cell_y, int cell_x, uint32 
             liquidHeader.liquidType = type;
         else
             map.liquidMapSize+=sizeof(liquid_type);
-
+     
         if (!(liquidHeader.flags & MAP_LIQUID_NO_HEIGHT))
             map.liquidMapSize += sizeof(float)*liquidHeader.width*liquidHeader.height;
     }
+
+    // map hole info 
+    uint16 holes[ADT_CELLS_PER_GRID][ADT_CELLS_PER_GRID]; 
+    if(map.liquidMapOffset) 
+        map.holesOffset = map.liquidMapOffset + map.liquidMapSize; 
+    else 
+        map.holesOffset = map.heightMapOffset + map.heightMapSize; 
+    map.holesSize = sizeof(holes); 
+    memset(holes, 0, map.holesSize); 
+    for(int i = 0; i < ADT_CELLS_PER_GRID; ++i) 
+    { 
+        for(int j = 0; j < ADT_CELLS_PER_GRID; ++j) 
+        { 
+            adt_MCNK * cell = cells->getMCNK(i,j); 
+            if(!cell) 
+                continue; 
+            holes[i][j] = cell->holes; 
+        } 
+    } 
 
     // Ok all data prepared - store it
     FILE *output=fopen(filename2, "wb");
@@ -864,6 +885,10 @@ bool ConvertADT(char *filename, char *filename2, int cell_y, int cell_x, uint32 
                 fwrite(&liquid_height[y+liquidHeader.offsetY][liquidHeader.offsetX], sizeof(float), liquidHeader.width, output);
         }
     }
+ 
+    // store hole data 
+    fwrite(holes, map.holesSize, 1, output); 
+ 
     fclose(output);
 
     return true;
@@ -918,7 +943,7 @@ void ExtractMapsFromMpq(uint32 build)
     delete [] map_ids;
 }
 
-bool ExtractFile( char const* mpq_name, std::string const& filename )
+bool ExtractFile( char const* mpq_name, std::string const& filename ) 
 {
     FILE *output = fopen(filename.c_str(), "wb");
     if(!output)

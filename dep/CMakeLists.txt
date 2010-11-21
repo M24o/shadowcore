@@ -33,6 +33,7 @@ if(CMAKE_SYSTEM_NAME MATCHES "Windows")
 endif()
 
 add_subdirectory(g3dlite)
+add_subdirectory(recastnavigation)
 
 if(SERVERS)
   add_subdirectory(sockets)

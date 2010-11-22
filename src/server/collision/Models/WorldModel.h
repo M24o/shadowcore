@@ -98,6 +98,9 @@ namespace VMAP
             std::vector<MeshTriangle> triangles;
             BIH meshTree;
             WmoLiquid *iLiquid;
+
+        public:
+            void getMeshData(std::vector<Vector3> &vertices, std::vector<MeshTriangle> &triangles);
     };
     /*! Holds a model (converted M2 or WMO) in its original coordinate space */
     class WorldModel
@@ -117,6 +120,9 @@ namespace VMAP
             uint32 RootWMOID;
             std::vector<GroupModel> groupModels;
             BIH groupTree;
+
+        public:
+            void getGroupModels(std::vector<GroupModel> &groupModels);
     };
 } // namespace VMAP
 

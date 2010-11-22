@@ -80,11 +80,14 @@ namespace VMAP
             void UnloadMapTile(uint32 tileX, uint32 tileY, VMapManager2 *vm);
             bool isTiled() const { return iIsTiled; }
             uint32 numLoadedTiles() const { return iLoadedTiles.size(); }
+
+        public:
+            void getModelInstances(ModelInstance* &models, uint32 &count);
     };
 
     struct AreaInfo
     {
-        AreaInfo(): result(false), ground_Z(-G3D::inf()) {};
+        AreaInfo(): result(false), ground_Z(-G3D::inf()) { };
         bool result;
         float ground_Z;
         uint32 flags;
